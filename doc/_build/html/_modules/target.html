@@ -1,0 +1,885 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>target &mdash; PyFT 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyFT 1.0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">PyFT 1.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for target</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">pyglet</span>
+<span class="kn">from</span> <span class="nn">pyglet.gl</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span><span class="nn">os</span><span class="o">,</span><span class="nn">datetime</span><span class="o">,</span><span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">config</span>
+<span class="kn">from</span> <span class="nn">pyglet.window</span> <span class="kn">import</span> <span class="n">key</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span><span class="p">,</span><span class="n">time</span>
+
+<div class="viewcode-block" id="FixationTargetApp"><a class="viewcode-back" href="../target.html#target.FixationTargetApp">[docs]</a><span class="k">class</span> <span class="nc">FixationTargetApp</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39;This class represents the entire application. All Target</span>
+<span class="sd">    objects are properties of this class. Also, this class owns all</span>
+<span class="sd">    OpenGL objects, so it&#39;s responsible for making sure a context</span>
+<span class="sd">    exists for drawing them, etc. This is also the only class knowing</span>
+<span class="sd">    anything about visual angle. When it instructs targets to draw</span>
+<span class="sd">    themselves, it does so in screen units, not visual angle units.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cons</span> <span class="o">=</span> <span class="n">Console</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">=</span> <span class="n">pyglet</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">Window</span><span class="p">(</span><span class="n">fullscreen</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">display</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">screens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">get_screens</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iScreen</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">DEFAULT_SCREEN</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cons</span><span class="o">.</span><span class="n">disp</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%d</span><span class="s"> screen(s) detected&#39;</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">screens</span><span class="p">))</span>
+<span class="c">#         print len(self.screens),&#39;screen(s) detected:&#39;</span>
+        <span class="k">for</span> <span class="n">screen</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">screens</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cons</span><span class="o">.</span><span class="n">disp</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\t</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="n">screen</span><span class="p">)</span>
+<span class="c">#             print &#39;\t&#39;,screen</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">screen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">screens</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">iScreen</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cons</span><span class="o">.</span><span class="n">disp</span><span class="p">(</span><span class="s">&#39;using screen </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">screen</span><span class="p">)</span>
+<span class="c">#             print &#39;Using screen&#39;,self.iScreen</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Current display has only&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">screens</span><span class="p">),</span> <span class="s">&#39;screen, but DEFAULT_SCREEN is set to&#39;</span><span class="p">,</span><span class="n">config</span><span class="o">.</span><span class="n">DEFAULT_SCREEN</span><span class="p">,</span><span class="s">&#39;in config.py.&#39;</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fullScreen</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">set_fullscreen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fullScreen</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">screen</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">height</span>
+
+        <span class="n">glClearColor</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">BACKGROUND_COLOR</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">config</span><span class="o">.</span><span class="n">BACKGROUND_COLOR</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">config</span><span class="o">.</span><span class="n">BACKGROUND_COLOR</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="mf">1.0</span><span class="p">)</span>
+
+        <span class="n">converter</span> <span class="o">=</span> <span class="n">Converter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="p">)</span>
+
+        <span class="n">loc</span> <span class="o">=</span> <span class="n">RetinalLocation</span><span class="p">(</span><span class="n">converter</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
+        <span class="n">loc</span><span class="o">.</span><span class="n">setLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">)</span>
+
+        <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">schedule_interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">,</span><span class="n">config</span><span class="o">.</span><span class="n">LOGGING_PERIOD</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="n">Keys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cons</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">)</span>
+
+        <span class="n">target</span> <span class="o">=</span> <span class="n">BlinkyStar</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">DEFAULT_LINE_WIDTH_DEG</span><span class="p">,</span><span class="n">config</span><span class="o">.</span><span class="n">DEFAULT_TARGET_RADIUS_DEG</span><span class="p">)</span>
+        
+        <span class="k">def</span> <span class="nf">nextScreen</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fullScreen</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">iScreen</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iScreen</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">screens</span><span class="p">)</span>
+                <span class="k">print</span> <span class="s">&#39;switching to screen </span><span class="si">%d</span><span class="s">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">iScreen</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">set_fullscreen</span><span class="p">(</span><span class="bp">True</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">screens</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">iScreen</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">height</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">width</span>
+
+        <span class="k">def</span> <span class="nf">toggleFullScreen</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fullScreen</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fullScreen</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">set_fullscreen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fullScreen</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">screens</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">iScreen</span><span class="p">])</span>
+
+        <span class="k">def</span> <span class="nf">showFPS</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cons</span><span class="o">.</span><span class="n">disp</span><span class="p">(</span><span class="s">&#39;drawing at </span><span class="si">%0.2f</span><span class="s"> fps&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nFrames</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;Main target movements&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">UP</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">loc</span><span class="o">.</span><span class="n">moveUp</span><span class="p">,</span><span class="s">&#39;up arrow&#39;</span><span class="p">,</span><span class="s">&#39;move target up by </span><span class="si">%0.1f</span><span class="s"> deg&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">RETINA_UNIT_DEG</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">RIGHT</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">loc</span><span class="o">.</span><span class="n">moveRight</span><span class="p">,</span><span class="s">&#39;right arrow&#39;</span><span class="p">,</span><span class="s">&#39;move target right by </span><span class="si">%0.1f</span><span class="s"> deg&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">RETINA_UNIT_DEG</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">loc</span><span class="o">.</span><span class="n">moveLeft</span><span class="p">,</span><span class="s">&#39;left arrow&#39;</span><span class="p">,</span><span class="s">&#39;move target left by </span><span class="si">%0.1f</span><span class="s"> deg&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">RETINA_UNIT_DEG</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">DOWN</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">loc</span><span class="o">.</span><span class="n">moveDown</span><span class="p">,</span><span class="s">&#39;down arrow&#39;</span><span class="p">,</span><span class="s">&#39;move target down by </span><span class="si">%0.1f</span><span class="s"> deg&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">RETINA_UNIT_DEG</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;Alternate target movements&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">UP</span><span class="p">,</span><span class="n">key</span><span class="o">.</span><span class="n">MOD_CTRL</span><span class="p">,</span><span class="n">loc</span><span class="o">.</span><span class="n">moveUpAlt</span><span class="p">,</span><span class="s">&#39;ctrl up arrow&#39;</span><span class="p">,</span><span class="s">&#39;move target up by </span><span class="si">%0.1f</span><span class="s"> deg&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">RETINA_ALTERNATE_UNIT_DEG</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">RIGHT</span><span class="p">,</span><span class="n">key</span><span class="o">.</span><span class="n">MOD_CTRL</span><span class="p">,</span><span class="n">loc</span><span class="o">.</span><span class="n">moveRightAlt</span><span class="p">,</span><span class="s">&#39;ctrl right arrow&#39;</span><span class="p">,</span><span class="s">&#39;move target right by </span><span class="si">%0.1f</span><span class="s"> deg&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">RETINA_ALTERNATE_UNIT_DEG</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span><span class="n">key</span><span class="o">.</span><span class="n">MOD_CTRL</span><span class="p">,</span><span class="n">loc</span><span class="o">.</span><span class="n">moveLeftAlt</span><span class="p">,</span><span class="s">&#39;ctrl left arrow&#39;</span><span class="p">,</span><span class="s">&#39;move target left by </span><span class="si">%0.1f</span><span class="s"> deg&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">RETINA_ALTERNATE_UNIT_DEG</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">DOWN</span><span class="p">,</span><span class="n">key</span><span class="o">.</span><span class="n">MOD_CTRL</span><span class="p">,</span><span class="n">loc</span><span class="o">.</span><span class="n">moveDownAlt</span><span class="p">,</span><span class="s">&#39;ctrl down arrow&#39;</span><span class="p">,</span><span class="s">&#39;move target down by </span><span class="si">%0.1f</span><span class="s"> deg&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">RETINA_ALTERNATE_UNIT_DEG</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;Target center offset&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">O</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">loc</span><span class="o">.</span><span class="n">brieflyShowOffset</span><span class="p">,</span><span class="s">&#39;o&#39;</span><span class="p">,</span><span class="s">&#39;show offset info&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">UP</span><span class="p">,</span><span class="n">key</span><span class="o">.</span><span class="n">MOD_ALT</span><span class="p">,</span><span class="n">loc</span><span class="o">.</span><span class="n">increaseYOffset</span><span class="p">,</span><span class="s">&#39;alt up arrow&#39;</span><span class="p">,</span><span class="s">&#39;move offset up by </span><span class="si">%d</span><span class="s"> pixels&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">OFFSET_UNIT_PIXELS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">RIGHT</span><span class="p">,</span><span class="n">key</span><span class="o">.</span><span class="n">MOD_ALT</span><span class="p">,</span><span class="n">loc</span><span class="o">.</span><span class="n">increaseXOffset</span><span class="p">,</span><span class="s">&#39;alt right arrow&#39;</span><span class="p">,</span><span class="s">&#39;move offset right by </span><span class="si">%d</span><span class="s"> pixels&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">OFFSET_UNIT_PIXELS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span><span class="n">key</span><span class="o">.</span><span class="n">MOD_ALT</span><span class="p">,</span><span class="n">loc</span><span class="o">.</span><span class="n">decreaseXOffset</span><span class="p">,</span><span class="s">&#39;alt left arrow&#39;</span><span class="p">,</span><span class="s">&#39;move offset left by </span><span class="si">%d</span><span class="s"> pixels&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">OFFSET_UNIT_PIXELS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">DOWN</span><span class="p">,</span><span class="n">key</span><span class="o">.</span><span class="n">MOD_ALT</span><span class="p">,</span><span class="n">loc</span><span class="o">.</span><span class="n">decreaseYOffset</span><span class="p">,</span><span class="s">&#39;alt down arrow&#39;</span><span class="p">,</span><span class="s">&#39;move offset down by </span><span class="si">%d</span><span class="s"> pixels&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">OFFSET_UNIT_PIXELS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;Target size/shape&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">EQUAL</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">target</span><span class="o">.</span><span class="n">increaseRadius</span><span class="p">,</span><span class="s">&#39;=&#39;</span><span class="p">,</span><span class="s">&#39;increase target radius by </span><span class="si">%0.1f</span><span class="s"> deg&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">TARGET_RADIUS_UNIT</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">MINUS</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">target</span><span class="o">.</span><span class="n">decreaseRadius</span><span class="p">,</span><span class="s">&#39;-&#39;</span><span class="p">,</span><span class="s">&#39;decrease target radius by </span><span class="si">%0.1f</span><span class="s"> deg&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">TARGET_RADIUS_UNIT</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">EQUAL</span><span class="p">,</span><span class="n">key</span><span class="o">.</span><span class="n">MOD_CTRL</span><span class="p">,</span><span class="n">target</span><span class="o">.</span><span class="n">increaseLineWidth</span><span class="p">,</span><span class="s">&#39;ctrl =&#39;</span><span class="p">,</span><span class="s">&#39;increase target line width by </span><span class="si">%0.2f</span><span class="s"> deg&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">LINE_WIDTH_UNIT</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">MINUS</span><span class="p">,</span><span class="n">key</span><span class="o">.</span><span class="n">MOD_CTRL</span><span class="p">,</span><span class="n">target</span><span class="o">.</span><span class="n">decreaseLineWidth</span><span class="p">,</span><span class="s">&#39;ctrl -&#39;</span><span class="p">,</span><span class="s">&#39;decrease target line width by </span><span class="si">%0.2f</span><span class="s"> deg&#39;</span><span class="o">%</span><span class="n">config</span><span class="o">.</span><span class="n">LINE_WIDTH_UNIT</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">EQUAL</span><span class="p">,</span><span class="n">key</span><span class="o">.</span><span class="n">MOD_ALT</span><span class="p">,</span><span class="n">target</span><span class="o">.</span><span class="n">increaseBlinkPeriod</span><span class="p">,</span><span class="s">&#39;alt =&#39;</span><span class="p">,</span><span class="s">&#39;increase target blink period by </span><span class="si">%0.1f</span><span class="s"> percent&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">BLINK_PERIOD_ADJUSTMENT_FACTOR</span><span class="o">*</span><span class="mf">100.0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">MINUS</span><span class="p">,</span><span class="n">key</span><span class="o">.</span><span class="n">MOD_ALT</span><span class="p">,</span><span class="n">target</span><span class="o">.</span><span class="n">decreaseBlinkPeriod</span><span class="p">,</span><span class="s">&#39;alt -&#39;</span><span class="p">,</span><span class="s">&#39;decrease target blink period by </span><span class="si">%0.1f</span><span class="s"> percent&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">BLINK_PERIOD_ADJUSTMENT_FACTOR</span><span class="o">*</span><span class="mf">100.0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;Other&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">SPACE</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">loc</span><span class="o">.</span><span class="n">switchEye</span><span class="p">,</span><span class="s">&#39;space&#39;</span><span class="p">,</span><span class="s">&#39;switch eye&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">ENTER</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">nextScreen</span><span class="p">,</span><span class="s">&#39;enter&#39;</span><span class="p">,</span><span class="s">&#39;next screen&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">F5</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">toggleFullScreen</span><span class="p">,</span><span class="s">&#39;f5&#39;</span><span class="p">,</span><span class="s">&#39;toggle full screen&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">C</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">cons</span><span class="o">.</span><span class="n">toggleVisible</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;toggle console&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">F</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">showFPS</span><span class="p">,</span><span class="s">&#39;f&#39;</span><span class="p">,</span><span class="s">&#39;show fps&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">section</span><span class="p">(</span><span class="s">&#39;Help&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">QUESTION</span><span class="p">,</span><span class="n">key</span><span class="o">.</span><span class="n">MOD_SHIFT</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">toggleHelp</span><span class="p">,</span><span class="s">&#39;?&#39;</span><span class="p">,</span><span class="s">&#39;show/hide help&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nFrames</span> <span class="o">=</span> <span class="mf">0.0</span>
+        
+        <span class="nd">@self.window.event</span>
+        <span class="k">def</span> <span class="nf">on_draw</span><span class="p">():</span>
+            <span class="n">glClear</span><span class="p">(</span><span class="n">GL_COLOR_BUFFER_BIT</span><span class="p">)</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">loc</span><span class="o">.</span><span class="n">xPx</span><span class="p">(),</span><span class="n">loc</span><span class="o">.</span><span class="n">yPx</span><span class="p">())</span>
+            <span class="n">loc</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cons</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nFrames</span><span class="o">+=</span><span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">t0</span>
+            
+        <span class="nd">@self.window.event</span>
+        <span class="k">def</span> <span class="nf">on_key_press</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span><span class="n">modifiers</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span><span class="n">modifiers</span><span class="p">)</span>
+
+        <span class="n">pyglet</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Converter"><a class="viewcode-back" href="../target.html#target.Converter">[docs]</a><span class="k">class</span> <span class="nc">Converter</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39;Converts visual angles to screen pixels.&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">window</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dpi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadDpi</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plateScaleRadPerM</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">PLATE_SCALE_RAD_PER_M</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dpi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadDpi</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pi</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xoff</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">width</span><span class="o">/</span><span class="mf">2.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yoff</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">height</span><span class="o">/</span><span class="mf">2.0</span>
+
+    <span class="k">def</span> <span class="nf">d2p</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">angleDeg</span><span class="p">):</span>
+        <span class="n">mPerPx</span> <span class="o">=</span> <span class="o">.</span><span class="mo">0254</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">dpi</span>
+        <span class="n">degPerRad</span> <span class="o">=</span> <span class="mf">180.0</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">psDegPerPx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plateScaleRadPerM</span> <span class="o">*</span> <span class="n">mPerPx</span> <span class="o">*</span> <span class="n">degPerRad</span>
+        <span class="k">return</span> <span class="n">angleDeg</span><span class="o">/</span><span class="n">psDegPerPx</span>
+
+    <span class="k">def</span> <span class="nf">loadDpi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">CALIBRATION_FILENAME</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;/&#39;</span><span class="o">+</span><span class="n">fn</span>
+        <span class="n">fid</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">dpistr</span> <span class="o">=</span> <span class="n">fid</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">fid</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">dpistr</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">getXoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">xoff</span>
+
+    <span class="k">def</span> <span class="nf">getYoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">yoff</span>
+</div>
+<div class="viewcode-block" id="MiniConverter"><a class="viewcode-back" href="../target.html#target.MiniConverter">[docs]</a><span class="k">class</span> <span class="nc">MiniConverter</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39;Converts visual angles to screen pixels, without keeping</span>
+<span class="sd">    track of screen offsets; useful for Component objects that need</span>
+<span class="sd">    to know how to scale themselves using visual angle units but</span>
+<span class="sd">    don&#39;t know anything about the window.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dpi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadDpi</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plateScaleRadPerM</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">PLATE_SCALE_RAD_PER_M</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dpi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadDpi</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pi</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+
+    <span class="k">def</span> <span class="nf">d2p</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">angleDeg</span><span class="p">):</span>
+        <span class="n">mPerPx</span> <span class="o">=</span> <span class="o">.</span><span class="mo">0254</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">dpi</span>
+        <span class="n">degPerRad</span> <span class="o">=</span> <span class="mf">180.0</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">psDegPerPx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plateScaleRadPerM</span> <span class="o">*</span> <span class="n">mPerPx</span> <span class="o">*</span> <span class="n">degPerRad</span>
+        <span class="k">return</span> <span class="n">angleDeg</span><span class="o">/</span><span class="n">psDegPerPx</span>
+
+    <span class="k">def</span> <span class="nf">loadDpi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">CALIBRATION_FILENAME</span>
+        <span class="n">fid</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">dpistr</span> <span class="o">=</span> <span class="n">fid</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">fid</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">dpistr</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="RetinalLocation"><a class="viewcode-back" href="../target.html#target.RetinalLocation">[docs]</a><span class="k">class</span> <span class="nc">RetinalLocation</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39;Keeps track of location of target, performs conversions between</span>
+<span class="sd">    visual angle and screen pixels.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">converter</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xDeg</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yDeg</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eye</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">LEFT</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eyeLabels</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">EYE_LABELS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">horizontalLabels</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">HORIZONTAL_LABELS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verticalLabels</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">VERTICAL_LABELS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">RETINA_UNIT_DEG</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alternateUnit</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">RETINA_ALTERNATE_UNIT_DEG</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xoff</span> <span class="o">=</span> <span class="n">converter</span><span class="o">.</span><span class="n">getXoff</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yoff</span> <span class="o">=</span> <span class="n">converter</span><span class="o">.</span><span class="n">getYoff</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xoff0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xoff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yoff0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yoff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">converter</span> <span class="o">=</span> <span class="n">converter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">textPadding</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cross</span> <span class="o">=</span> <span class="n">SimpleCross</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">OFFSET_COLOR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">setLogger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">logger</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>
+    
+    <span class="k">def</span> <span class="nf">changed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">unschedule</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">printInfo</span><span class="p">)</span>
+        <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">schedule_once</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">printInfo</span><span class="p">,</span><span class="mf">3.0</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">printInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">logThis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;No logger set for RetinalLocation object.&#39;</span>
+
+    <span class="k">def</span> <span class="nf">switchEye</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eye</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eye</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">%</span><span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">horizontalLabels</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s">&#39;eye set to </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">eyeLabels</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">eye</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">moveLeft</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xDeg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xDeg</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s">&#39;retinal location: </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">moveRight</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xDeg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xDeg</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s">&#39;retinal location: </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">moveUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yDeg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yDeg</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s">&#39;retinal location: </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">moveDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yDeg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yDeg</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s">&#39;retinal location: </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">moveLeftAlt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xDeg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xDeg</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">alternateUnit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s">&#39;retinal location: </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">moveRightAlt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xDeg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xDeg</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">alternateUnit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s">&#39;retinal location: </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">moveUpAlt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yDeg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yDeg</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">alternateUnit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s">&#39;retinal location: </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">moveDownAlt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yDeg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yDeg</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">alternateUnit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s">&#39;retinal location: </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">sign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">num</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">copysign</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">num</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">hIdx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xDeg</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">vIdx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">yDeg</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%0.1f</span><span class="s">&#39;</span><span class="o">%</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xDeg</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">horizontalLabels</span><span class="p">[</span><span class="n">hIdx</span><span class="p">]</span> <span class="o">+</span> \
+            <span class="s">&#39;, &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%0.1f</span><span class="s">&#39;</span><span class="o">%</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">yDeg</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">verticalLabels</span><span class="p">[</span><span class="n">vIdx</span><span class="p">]</span> <span class="o">+</span> \
+            <span class="s">&#39; (&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">eyeLabels</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">eye</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;)&#39;</span>
+    <span class="k">def</span> <span class="nf">offsetInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;xoffset=</span><span class="si">%d</span><span class="s"> px, yoffset=</span><span class="si">%d</span><span class="s"> px&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xoff</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">xoff0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">yoff</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">yoff0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">xPx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">converter</span><span class="o">.</span><span class="n">d2p</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xDeg</span><span class="p">)</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">xoff</span>
+
+    <span class="k">def</span> <span class="nf">yPx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">converter</span><span class="o">.</span><span class="n">d2p</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">yDeg</span><span class="p">)</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">yoff</span>
+
+    <span class="k">def</span> <span class="nf">increaseXOffset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xoff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xoff</span> <span class="o">+</span> <span class="n">config</span><span class="o">.</span><span class="n">OFFSET_UNIT_PIXELS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">unschedule</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">setInvisible</span><span class="p">)</span>
+        <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">schedule_once</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">setInvisible</span><span class="p">,</span><span class="n">config</span><span class="o">.</span><span class="n">OFFSET_CROSS_DURATION</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s">&#39;retinal center offset: </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">offsetInfo</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">decreaseXOffset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xoff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xoff</span> <span class="o">-</span> <span class="n">config</span><span class="o">.</span><span class="n">OFFSET_UNIT_PIXELS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">unschedule</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">setInvisible</span><span class="p">)</span>
+        <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">schedule_once</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">setInvisible</span><span class="p">,</span><span class="n">config</span><span class="o">.</span><span class="n">OFFSET_CROSS_DURATION</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s">&#39;retinal center offset: </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">offsetInfo</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">increaseYOffset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yoff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yoff</span> <span class="o">+</span> <span class="n">config</span><span class="o">.</span><span class="n">OFFSET_UNIT_PIXELS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">unschedule</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">setInvisible</span><span class="p">)</span>
+        <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">schedule_once</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">setInvisible</span><span class="p">,</span><span class="n">config</span><span class="o">.</span><span class="n">OFFSET_CROSS_DURATION</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s">&#39;retinal center offset: </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">offsetInfo</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">decreaseYOffset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yoff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yoff</span> <span class="o">-</span> <span class="n">config</span><span class="o">.</span><span class="n">OFFSET_UNIT_PIXELS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">unschedule</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">setInvisible</span><span class="p">)</span>
+        <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">schedule_once</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">setInvisible</span><span class="p">,</span><span class="n">config</span><span class="o">.</span><span class="n">OFFSET_CROSS_DURATION</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s">&#39;retinal center offset: </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">offsetInfo</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">brieflyShowOffset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="c">#         self.cross.setVisible(True)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">toggleVisible</span><span class="p">()</span>
+        <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">unschedule</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">setInvisible</span><span class="p">)</span>
+        <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">schedule_once</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">setInvisible</span><span class="p">,</span><span class="n">config</span><span class="o">.</span><span class="n">OFFSET_CROSS_DURATION</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">right</span><span class="p">,</span><span class="n">top</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">pyglet</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">(),</span>
+                                  <span class="n">font_name</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">FONT_NAME</span><span class="p">,</span>
+                                  <span class="n">font_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">FONT_SIZE</span><span class="p">,</span>
+                                  <span class="n">x</span><span class="o">=</span><span class="n">right</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">textPadding</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">top</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">textPadding</span><span class="p">,</span>
+                                  <span class="n">anchor_x</span><span class="o">=</span><span class="s">&#39;right&#39;</span><span class="p">,</span> <span class="n">anchor_y</span><span class="o">=</span><span class="s">&#39;top&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="mi">128</span><span class="p">,</span><span class="mi">128</span><span class="p">,</span><span class="mi">128</span><span class="p">,</span><span class="mi">255</span><span class="p">])</span>
+        <span class="n">offsetLabelColor</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">OFFSET_COLOR</span><span class="p">:</span>
+            <span class="n">offsetLabelColor</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mi">255</span><span class="o">*</span><span class="n">val</span><span class="p">)))</span>
+        <span class="n">offsetLabelColor</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span>
+        <span class="n">offsetLabel</span> <span class="o">=</span> <span class="n">pyglet</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offsetInfo</span><span class="p">()),</span>
+                                        <span class="n">width</span><span class="o">=</span><span class="mi">350</span><span class="p">,</span>
+                                        <span class="n">multiline</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                        <span class="n">font_name</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">FONT_NAME</span><span class="p">,</span>
+                                        <span class="n">font_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">FONT_SIZE</span><span class="p">,</span>
+                                        <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">textPadding</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">top</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">textPadding</span><span class="p">,</span>
+                                        <span class="n">anchor_x</span><span class="o">=</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="n">anchor_y</span><span class="o">=</span><span class="s">&#39;top&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">offsetLabelColor</span><span class="p">)</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xoff</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">yoff</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cross</span><span class="o">.</span><span class="n">visible</span><span class="p">:</span>
+            <span class="n">offsetLabel</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Console"><a class="viewcode-back" href="../target.html#target.Console">[docs]</a><span class="k">class</span> <span class="nc">Console</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39;A pseudo-console to be drawn on the target window for debugging.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="mi">1920</span><span class="p">,</span><span class="n">bufferLength</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span><span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nLines</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxLines</span> <span class="o">=</span> <span class="n">bufferLength</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">right</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">top</span> <span class="o">=</span> <span class="mi">600</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">255</span><span class="p">]</span>
+        
+    <span class="k">def</span> <span class="nf">disp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">line</span><span class="p">):</span>
+        <span class="k">print</span> <span class="n">line</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nLines</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nLines</span><span class="o">&gt;</span><span class="bp">self</span><span class="o">.</span><span class="n">maxLines</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nLines</span><span class="o">-=</span><span class="mi">1</span>
+    
+    <span class="k">def</span> <span class="nf">toString</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">outstr</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">:</span>
+            <span class="n">outstr</span> <span class="o">=</span> <span class="n">outstr</span> <span class="o">+</span> <span class="n">line</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span>
+        <span class="k">return</span> <span class="n">outstr</span>
+    
+    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">visible</span><span class="p">:</span>
+            <span class="n">console</span> <span class="o">=</span> <span class="n">pyglet</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">toString</span><span class="p">(),</span>
+                                      <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
+                                      <span class="n">multiline</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                      <span class="n">font_name</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">CONSOLE_FONT_NAME</span><span class="p">,</span>
+                                      <span class="n">font_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">CONSOLE_FONT_SIZE</span><span class="p">,</span>
+                                      <span class="n">x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">top</span><span class="p">,</span>
+                                      <span class="n">anchor_x</span><span class="o">=</span><span class="s">&#39;right&#39;</span><span class="p">,</span> <span class="n">anchor_y</span><span class="o">=</span><span class="s">&#39;top&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">)</span>
+            <span class="n">console</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+            
+    <span class="k">def</span> <span class="nf">toggleVisible</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">visible</span>
+</div>
+<div class="viewcode-block" id="Keys"><a class="viewcode-back" href="../target.html#target.Keys">[docs]</a><span class="k">class</span> <span class="nc">Keys</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39;Generates key bindings and associated help messages.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">console</span><span class="p">,</span><span class="n">logger</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cons</span> <span class="o">=</span> <span class="n">console</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bindings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">helpVisible</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">textPadding</span> <span class="o">=</span> <span class="mi">10</span>
+
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">symbol</span><span class="p">,</span><span class="n">modifier</span><span class="p">,</span><span class="n">func</span><span class="p">,</span><span class="n">keyinfo</span><span class="p">,</span><span class="n">funcinfo</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">funcinfo</span><span class="o">==</span><span class="bp">None</span><span class="p">:</span>
+            <span class="n">funcinfo</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">__name__</span>
+        <span class="n">tup</span> <span class="o">=</span> <span class="p">(</span><span class="n">symbol</span><span class="p">,</span><span class="n">modifier</span><span class="p">,</span><span class="n">func</span><span class="p">,</span><span class="n">keyinfo</span><span class="p">,</span><span class="n">funcinfo</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bindings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tup</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sectionName</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bindings</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="n">sectionName</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">))</span>
+        
+    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">symbol</span><span class="p">,</span><span class="n">modifier</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="n">modifier</span> <span class="o">&amp;</span> <span class="n">key</span><span class="o">.</span><span class="n">MOD_ALT</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">modifier</span> <span class="o">&amp;</span> <span class="n">key</span><span class="o">.</span><span class="n">MOD_CTRL</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">modifier</span> <span class="o">&amp;</span> <span class="n">key</span><span class="o">.</span><span class="n">MOD_SHIFT</span><span class="p">)):</span>
+            <span class="n">modifier</span> <span class="o">=</span> <span class="mi">0</span>
+            
+        <span class="k">for</span> <span class="n">tup</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bindings</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tup</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="n">symbol</span> <span class="ow">and</span> <span class="p">((</span><span class="n">modifier</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">tup</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">tup</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">modifier</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cons</span><span class="o">.</span><span class="n">disp</span><span class="p">(</span><span class="n">tup</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="n">tup</span><span class="p">[</span><span class="mi">2</span><span class="p">]()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">output</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cons</span><span class="o">.</span><span class="n">disp</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+<span class="c">#                     self.logger.logThis(output)</span>
+
+    <span class="k">def</span> <span class="nf">helpString</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">helpstr</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">tup</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bindings</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">tup</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">helpstr</span> <span class="o">=</span> <span class="n">helpstr</span> <span class="o">+</span> <span class="n">tup</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;:</span><span class="se">\t</span><span class="s"> &#39;</span> <span class="o">+</span> <span class="n">tup</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">helpstr</span> <span class="o">=</span> <span class="n">helpstr</span> <span class="o">+</span> <span class="s">&#39;---------- &#39;</span> <span class="o">+</span> <span class="n">tup</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; ----------</span><span class="se">\n</span><span class="s">&#39;</span>
+        <span class="k">return</span> <span class="n">helpstr</span>
+
+    <span class="k">def</span> <span class="nf">showHelp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dt</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">helpVisible</span> <span class="o">=</span> <span class="bp">True</span>
+        
+    <span class="k">def</span> <span class="nf">hideHelp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dt</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">helpVisible</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">toggleHelp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">helpVisible</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">helpVisible</span>
+
+    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">left</span><span class="p">,</span><span class="n">top</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">helpVisible</span><span class="p">:</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="n">pyglet</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">helpString</span><span class="p">(),</span>
+                                      <span class="n">width</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+                                      <span class="n">multiline</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                      <span class="n">font_name</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">FONT_NAME</span><span class="p">,</span>
+                                      <span class="n">font_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">FONT_SIZE</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span>
+                                      <span class="n">x</span><span class="o">=</span><span class="n">left</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">textPadding</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">top</span><span class="o">-</span><span class="mi">10</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">textPadding</span><span class="p">,</span>
+                                      <span class="n">anchor_x</span><span class="o">=</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="n">anchor_y</span><span class="o">=</span><span class="s">&#39;top&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="mi">255</span><span class="p">])</span>
+            <span class="n">label</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+
+
+        
+        </div>
+<div class="viewcode-block" id="Logger"><a class="viewcode-back" href="../target.html#target.Logger">[docs]</a><span class="k">class</span> <span class="nc">Logger</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39;Logs the position of fixation target at intervals specified by config.LOGGING_PERIOD.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">loc</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loc</span> <span class="o">=</span> <span class="n">loc</span>
+        <span class="n">logPath</span> <span class="o">=</span> <span class="s">&#39;./logs/&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">logPath</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">logPath</span><span class="p">)</span>        
+        <span class="n">nowStr</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&quot;%Y%m</span><span class="si">%d</span><span class="s">%H%M%S&quot;</span><span class="p">)</span>
+        <span class="n">logFilename</span> <span class="o">=</span> <span class="n">logPath</span> <span class="o">+</span> <span class="n">nowStr</span> <span class="o">+</span> <span class="s">&#39;_log.txt&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logFid</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">logFilename</span><span class="p">,</span><span class="s">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>
+        <span class="n">nowStr</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&quot;%Y%m</span><span class="si">%d</span><span class="s">%H%M%S&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logFid</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;status: &#39;</span><span class="o">+</span><span class="n">nowStr</span><span class="o">+</span><span class="s">&#39;,&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">loc</span><span class="o">.</span><span class="n">info</span><span class="p">()</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">logThis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">text</span><span class="p">):</span>
+        <span class="n">nowStr</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&quot;%Y%m</span><span class="si">%d</span><span class="s">%H%M%S&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logFid</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;update: &#39;</span><span class="o">+</span><span class="n">nowStr</span><span class="o">+</span><span class="s">&#39;,&#39;</span><span class="o">+</span><span class="n">text</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logFid</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Target"><a class="viewcode-back" href="../target.html#target.Target">[docs]</a><span class="k">class</span> <span class="nc">Target</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39;Superclass for target objects. Each target consists of one or more components, which can be</span>
+<span class="sd">    added upon instantiation using the constructor&#39;s COMPONENTS parameter, or added sequentially</span>
+<span class="sd">    using the ADD method.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">components</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nStates</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blinkers</span> <span class="o">=</span> <span class="p">[]</span>
+        
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">component</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">component</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">redraw</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">redraw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dt</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">setBlink</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">applyTo</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">blinkPeriod</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">BLINK_PERIOD</span><span class="p">,</span><span class="n">dutyCycle</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">BLINK_DUTY_CYCLE</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">applyTo</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">applyTo</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">blinkers</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">applyTo</span><span class="p">:</span>
+            <span class="n">component</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">setBlinkPeriod</span><span class="p">(</span><span class="n">blinkPeriod</span><span class="p">)</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">setBlinkDutyCycle</span><span class="p">(</span><span class="n">dutyCycle</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">blinkers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">component</span><span class="p">)</span>
+            <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">schedule_interval</span><span class="p">(</span><span class="n">component</span><span class="o">.</span><span class="n">toggleVisible</span><span class="p">,</span><span class="n">blinkPeriod</span><span class="o">/</span><span class="nb">round</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">dutyCycle</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">increaseBlinkPeriod</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">newPeriod</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">blinker</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blinkers</span><span class="p">:</span>
+            <span class="n">oldPeriod</span> <span class="o">=</span> <span class="n">blinker</span><span class="o">.</span><span class="n">getBlinkPeriod</span><span class="p">()</span>
+            <span class="n">newPeriod</span> <span class="o">=</span> <span class="n">oldPeriod</span> <span class="o">+</span> <span class="n">config</span><span class="o">.</span><span class="n">BLINK_PERIOD_ADJUSTMENT_FACTOR</span><span class="o">*</span><span class="n">oldPeriod</span>
+            <span class="n">dutyCycle</span> <span class="o">=</span> <span class="n">blinker</span><span class="o">.</span><span class="n">getBlinkDutyCycle</span><span class="p">()</span>
+            <span class="n">blinker</span><span class="o">.</span><span class="n">setBlinkPeriod</span><span class="p">(</span><span class="n">newPeriod</span><span class="p">)</span>
+            <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">unschedule</span><span class="p">(</span><span class="n">blinker</span><span class="o">.</span><span class="n">toggleVisible</span><span class="p">)</span>
+            <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">schedule_interval</span><span class="p">(</span><span class="n">blinker</span><span class="o">.</span><span class="n">toggleVisible</span><span class="p">,</span><span class="n">newPeriod</span><span class="o">/</span><span class="nb">round</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">dutyCycle</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">newPeriod</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;setting period to </span><span class="si">%0.1f</span><span class="s">&#39;</span><span class="o">%</span><span class="n">newPeriod</span>
+        
+    <span class="k">def</span> <span class="nf">decreaseBlinkPeriod</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">newPeriod</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">blinker</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blinkers</span><span class="p">:</span>
+            <span class="n">oldPeriod</span> <span class="o">=</span> <span class="n">blinker</span><span class="o">.</span><span class="n">getBlinkPeriod</span><span class="p">()</span>
+            <span class="n">newPeriod</span> <span class="o">=</span> <span class="n">oldPeriod</span> <span class="o">-</span> <span class="n">config</span><span class="o">.</span><span class="n">BLINK_PERIOD_ADJUSTMENT_FACTOR</span><span class="o">*</span><span class="n">oldPeriod</span>
+            <span class="n">newPeriod</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">newPeriod</span><span class="p">,</span><span class="n">config</span><span class="o">.</span><span class="n">BLINK_PERIOD_MINIMUM</span><span class="p">)</span>
+            <span class="n">dutyCycle</span> <span class="o">=</span> <span class="n">blinker</span><span class="o">.</span><span class="n">getBlinkDutyCycle</span><span class="p">()</span>
+            <span class="n">blinker</span><span class="o">.</span><span class="n">setBlinkPeriod</span><span class="p">(</span><span class="n">newPeriod</span><span class="p">)</span>
+            <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">unschedule</span><span class="p">(</span><span class="n">blinker</span><span class="o">.</span><span class="n">toggleVisible</span><span class="p">)</span>
+            <span class="n">pyglet</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">schedule_interval</span><span class="p">(</span><span class="n">blinker</span><span class="o">.</span><span class="n">toggleVisible</span><span class="p">,</span><span class="n">newPeriod</span><span class="o">/</span><span class="nb">round</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">dutyCycle</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">newPeriod</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;setting period to </span><span class="si">%0.1f</span><span class="s">&#39;</span><span class="o">%</span><span class="n">newPeriod</span>
+
+    <span class="k">def</span> <span class="nf">increaseLineWidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">increaseLineWidth</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">decreaseLineWidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">decreaseLineWidth</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">increaseRadius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">increaseRadius</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">decreaseRadius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">decreaseRadius</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">setColor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">newColor</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">setColor</span><span class="p">(</span><span class="n">newColor</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">setVisible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">newVisible</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="n">newVisible</span>
+        <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="n">newVisible</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">toggleVisible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dt</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">visible</span>
+        <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">toggleVisible</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">setInvisible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dt</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+
+</div>
+<span class="k">class</span> <span class="nc">SimpleCross</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">]):</span>
+        <span class="n">Target</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">s1</span> <span class="o">=</span> <span class="n">Spoke</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="mf">60.0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="n">theta</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+        <span class="n">s2</span> <span class="o">=</span> <span class="n">Spoke</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="mf">60.0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="n">theta</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">BlinkyStar</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">LW</span><span class="p">,</span><span class="n">R</span><span class="p">):</span>
+        <span class="n">Target</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="c"># vertical spokes:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">X</span><span class="p">(</span><span class="n">LW</span><span class="p">,</span><span class="n">R</span><span class="p">,</span><span class="n">theta</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">X</span><span class="p">(</span><span class="n">LW</span><span class="p">,</span><span class="n">R</span><span class="p">,</span><span class="n">theta</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">4.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">X</span><span class="p">(</span><span class="n">LW</span><span class="p">,</span><span class="n">R</span><span class="p">,</span><span class="n">theta</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">4.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setBlink</span><span class="p">([</span><span class="mi">2</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="Component"><a class="viewcode-back" href="../target.html#target.Component">[docs]</a><span class="k">class</span> <span class="nc">Component</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39;Superclass for target components. A component may be a line or a circle, for instance.</span>
+<span class="sd">    A target shape, such as a star or a box, may be made up of many components.&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">lineWidthDeg</span><span class="p">,</span><span class="n">radiusDeg</span><span class="p">,</span><span class="n">theta</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">miniConverter</span> <span class="o">=</span> <span class="n">MiniConverter</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d2p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">miniConverter</span><span class="o">.</span><span class="n">d2p</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lineWidth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2p</span><span class="p">(</span><span class="n">lineWidthDeg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2p</span><span class="p">(</span><span class="n">radiusDeg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">color</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blinkPeriod</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blinkDutyCycle</span> <span class="o">=</span> <span class="bp">None</span>
+        
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">setBlinkPeriod</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">newBlinkPeriod</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blinkPeriod</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">newBlinkPeriod</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">getBlinkPeriod</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">blinkPeriod</span>
+    
+    <span class="k">def</span> <span class="nf">setBlinkDutyCycle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">newBlinkDutyCycle</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blinkDutyCycle</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">newBlinkDutyCycle</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">getBlinkDutyCycle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">blinkDutyCycle</span>
+
+    <span class="k">def</span> <span class="nf">increaseLineWidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lineWidth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineWidth</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2p</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">LINE_WIDTH_UNIT</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">decreaseLineWidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lineWidth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lineWidth</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2p</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">LINE_WIDTH_UNIT</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">increaseRadius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2p</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">TARGET_RADIUS_UNIT</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">decreaseRadius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2p</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">TARGET_RADIUS_UNIT</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Component.draw"><a class="viewcode-back" href="../target.html#target.Component.draw">[docs]</a>    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Draw this component at position x,y (pixels). Assume a gl context for</span>
+<span class="sd">        drawing is available, generated by the caller.&#39;&#39;&#39;</span>
+        <span class="k">pass</span>
+</div>
+    <span class="k">def</span> <span class="nf">setColor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">newColor</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">newColor</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">msg</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">setVisible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">newVisible</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="n">newVisible</span>
+
+    <span class="k">def</span> <span class="nf">genSetVisible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">newVisible</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="n">newVisible</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">toggleVisible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">visible</span>
+        
+    <span class="k">def</span> <span class="nf">genToggleVisible</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggleVisible</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dTheta</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">+</span> <span class="n">dTheta</span>
+
+    <span class="k">def</span> <span class="nf">genRotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dTheta</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">dTheta</span><span class="p">))</span>
+
+
+</div>
+<span class="k">class</span> <span class="nc">Circle</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">visible</span><span class="p">:</span>
+            <span class="n">pi</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+            <span class="n">radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
+            <span class="n">iterations</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">radius</span><span class="o">*</span><span class="mf">2.0</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span> <span class="o">/</span> <span class="n">iterations</span><span class="p">)</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span> <span class="o">/</span> <span class="n">iterations</span><span class="p">)</span>
+            <span class="n">dx</span><span class="p">,</span><span class="n">dy</span> <span class="o">=</span> <span class="n">radius</span><span class="p">,</span><span class="mi">0</span>
+            <span class="n">glBegin</span><span class="p">(</span><span class="n">GL_TRIANGLE_FAN</span><span class="p">)</span>
+            <span class="n">glColor3f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">dx</span><span class="p">,</span><span class="n">y</span><span class="o">+</span><span class="n">dy</span><span class="p">)</span>
+                <span class="n">dx</span><span class="p">,</span><span class="n">dy</span> <span class="o">=</span> <span class="p">(</span><span class="n">dx</span><span class="o">*</span><span class="n">c</span> <span class="o">-</span> <span class="n">dy</span><span class="o">*</span><span class="n">s</span><span class="p">),(</span><span class="n">dy</span><span class="o">*</span><span class="n">c</span> <span class="o">+</span> <span class="n">dx</span><span class="o">*</span><span class="n">s</span><span class="p">)</span>
+            <span class="n">glEnd</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">Spoke</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">visible</span><span class="p">:</span>
+            <span class="n">pi</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+            <span class="n">cos</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span>
+            <span class="n">sin</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span>
+            <span class="n">radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
+            <span class="n">dTheta</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">atan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lineWidth</span><span class="o">/</span><span class="n">radius</span><span class="p">)</span>
+
+            <span class="n">lw2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineWidth</span><span class="o">/</span><span class="mf">2.0</span>
+            <span class="n">thetaA</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">-</span> <span class="n">dTheta</span>
+            <span class="n">thetaB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">+</span> <span class="n">dTheta</span>
+            <span class="n">x1a</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">thetaA</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">x2a</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">thetaA</span><span class="o">+</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">y1a</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">thetaA</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+            <span class="n">y2a</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">thetaA</span><span class="o">+</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+            <span class="n">x1b</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">thetaB</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">x2b</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">thetaB</span><span class="o">+</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">y1b</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">thetaB</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+            <span class="n">y2b</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">thetaB</span><span class="o">+</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+            <span class="n">glBegin</span><span class="p">(</span><span class="n">GL_QUADS</span><span class="p">)</span>
+            <span class="n">glColor3f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x1a</span><span class="p">,</span><span class="n">y1a</span><span class="p">)</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x1b</span><span class="p">,</span><span class="n">y1b</span><span class="p">)</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x2a</span><span class="p">,</span><span class="n">y2a</span><span class="p">)</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x2b</span><span class="p">,</span><span class="n">y2b</span><span class="p">)</span>
+            <span class="n">glEnd</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">X</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">visible</span><span class="p">:</span>
+            <span class="n">glBegin</span><span class="p">(</span><span class="n">GL_QUADS</span><span class="p">)</span>
+
+            <span class="n">pi</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+            <span class="n">cos</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span>
+            <span class="n">sin</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span>
+            <span class="n">radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
+            <span class="n">dTheta</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">atan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lineWidth</span><span class="o">/</span><span class="n">radius</span><span class="p">)</span>
+
+            <span class="n">lw2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineWidth</span><span class="o">/</span><span class="mf">2.0</span>
+            <span class="n">thetaA</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">-</span> <span class="n">dTheta</span>
+            <span class="n">thetaB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">+</span> <span class="n">dTheta</span>
+            <span class="n">x1a</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">thetaA</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">x2a</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">thetaA</span><span class="o">+</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">y1a</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">thetaA</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+            <span class="n">y2a</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">thetaA</span><span class="o">+</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+            <span class="n">x1b</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">thetaB</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">x2b</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">thetaB</span><span class="o">+</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">y1b</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">thetaB</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+            <span class="n">y2b</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">thetaB</span><span class="o">+</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+            <span class="n">glColor3f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x1a</span><span class="p">,</span><span class="n">y1a</span><span class="p">)</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x1b</span><span class="p">,</span><span class="n">y1b</span><span class="p">)</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x2a</span><span class="p">,</span><span class="n">y2a</span><span class="p">)</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x2b</span><span class="p">,</span><span class="n">y2b</span><span class="p">)</span>
+
+            <span class="n">thetaA</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">-</span> <span class="n">dTheta</span> <span class="o">+</span> <span class="n">pi</span><span class="o">/</span><span class="mf">2.0</span>
+            <span class="n">thetaB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">+</span> <span class="n">dTheta</span> <span class="o">+</span> <span class="n">pi</span><span class="o">/</span><span class="mf">2.0</span>
+            <span class="n">x1a</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">thetaA</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">x2a</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">thetaA</span><span class="o">+</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">y1a</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">thetaA</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+            <span class="n">y2a</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">thetaA</span><span class="o">+</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+            <span class="n">x1b</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">thetaB</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">x2b</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">thetaB</span><span class="o">+</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">y1b</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">thetaB</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+            <span class="n">y2b</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">thetaB</span><span class="o">+</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x1a</span><span class="p">,</span><span class="n">y1a</span><span class="p">)</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x1b</span><span class="p">,</span><span class="n">y1b</span><span class="p">)</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x2a</span><span class="p">,</span><span class="n">y2a</span><span class="p">)</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x2b</span><span class="p">,</span><span class="n">y2b</span><span class="p">)</span>
+            
+            <span class="n">glEnd</span><span class="p">()</span>
+
+
+
+<span class="k">class</span> <span class="nc">Tangent</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">visible</span><span class="p">:</span>
+            <span class="n">pi</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+            <span class="n">cos</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span>
+            <span class="n">sin</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span>
+            <span class="n">radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
+            <span class="n">dRadius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineWidth</span>
+            <span class="n">theta1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">-</span> <span class="n">pi</span><span class="o">/</span><span class="mf">4.0</span>
+            <span class="n">theta2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">+</span> <span class="n">pi</span><span class="o">/</span><span class="mf">4.0</span>
+            <span class="n">radiusA</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">-</span> <span class="n">dRadius</span>
+            <span class="n">radiusB</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">+</span> <span class="n">dRadius</span>
+            <span class="n">x1</span> <span class="o">=</span> <span class="n">radiusA</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">theta1</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">x2</span> <span class="o">=</span> <span class="n">radiusA</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">theta2</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">y1</span> <span class="o">=</span> <span class="n">radiusA</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">theta1</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+            <span class="n">y2</span> <span class="o">=</span> <span class="n">radiusA</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">theta2</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+
+            <span class="n">x3</span> <span class="o">=</span> <span class="n">radiusB</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">theta2</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">x4</span> <span class="o">=</span> <span class="n">radiusB</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">theta1</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">y3</span> <span class="o">=</span> <span class="n">radiusB</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">theta2</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+            <span class="n">y4</span> <span class="o">=</span> <span class="n">radiusB</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">theta1</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span>
+
+            <span class="n">glBegin</span><span class="p">(</span><span class="n">GL_QUADS</span><span class="p">)</span>
+            <span class="n">glColor3f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">y1</span><span class="p">)</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span><span class="n">y2</span><span class="p">)</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x3</span><span class="p">,</span><span class="n">y3</span><span class="p">)</span>
+            <span class="n">glVertex2f</span><span class="p">(</span><span class="n">x4</span><span class="p">,</span><span class="n">y4</span><span class="p">)</span>
+            <span class="n">glEnd</span><span class="p">()</span>
+
+<span class="n">fta</span> <span class="o">=</span> <span class="n">FixationTargetApp</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">PyFT 1.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Ravi S. Jonnal.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

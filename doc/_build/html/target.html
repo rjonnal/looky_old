@@ -1,0 +1,181 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>target &mdash; PyFT 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyFT 1.0 documentation" href="index.html" />
+    <link rel="prev" title="Installation of PyFT" href="installation.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation of PyFT"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyFT 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-target">
+<span id="target"></span><h1>target<a class="headerlink" href="#module-target" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="target.FixationTargetApp">
+<em class="property">class </em><tt class="descclassname">target.</tt><tt class="descname">FixationTargetApp</tt><a class="reference internal" href="_modules/target.html#FixationTargetApp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#target.FixationTargetApp" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class represents the entire application. All Target
+objects are properties of this class. Also, this class owns all
+OpenGL objects, so it&#8217;s responsible for making sure a context
+exists for drawing them, etc. This is also the only class knowing
+anything about visual angle. When it instructs targets to draw
+themselves, it does so in screen units, not visual angle units.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="target.Converter">
+<em class="property">class </em><tt class="descclassname">target.</tt><tt class="descname">Converter</tt><big>(</big><em>window</em><big>)</big><a class="reference internal" href="_modules/target.html#Converter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#target.Converter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts visual angles to screen pixels.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="target.MiniConverter">
+<em class="property">class </em><tt class="descclassname">target.</tt><tt class="descname">MiniConverter</tt><a class="reference internal" href="_modules/target.html#MiniConverter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#target.MiniConverter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts visual angles to screen pixels, without keeping
+track of screen offsets; useful for Component objects that need
+to know how to scale themselves using visual angle units but
+don&#8217;t know anything about the window.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="target.RetinalLocation">
+<em class="property">class </em><tt class="descclassname">target.</tt><tt class="descname">RetinalLocation</tt><big>(</big><em>converter</em><big>)</big><a class="reference internal" href="_modules/target.html#RetinalLocation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#target.RetinalLocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Keeps track of location of target, performs conversions between
+visual angle and screen pixels.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="target.Console">
+<em class="property">class </em><tt class="descclassname">target.</tt><tt class="descname">Console</tt><big>(</big><em>right=1920</em>, <em>bufferLength=20</em>, <em>width=800</em><big>)</big><a class="reference internal" href="_modules/target.html#Console"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#target.Console" title="Permalink to this definition">¶</a></dt>
+<dd><p>A pseudo-console to be drawn on the target window for debugging.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="target.Keys">
+<em class="property">class </em><tt class="descclassname">target.</tt><tt class="descname">Keys</tt><big>(</big><em>console</em>, <em>logger</em><big>)</big><a class="reference internal" href="_modules/target.html#Keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#target.Keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates key bindings and associated help messages.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="target.Logger">
+<em class="property">class </em><tt class="descclassname">target.</tt><tt class="descname">Logger</tt><big>(</big><em>loc</em><big>)</big><a class="reference internal" href="_modules/target.html#Logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#target.Logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logs the position of fixation target at intervals specified by config.LOGGING_PERIOD.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="target.Target">
+<em class="property">class </em><tt class="descclassname">target.</tt><tt class="descname">Target</tt><a class="reference internal" href="_modules/target.html#Target"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#target.Target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Superclass for target objects. Each target consists of one or more components, which can be
+added upon instantiation using the constructor&#8217;s COMPONENTS parameter, or added sequentially
+using the ADD method.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="target.Component">
+<em class="property">class </em><tt class="descclassname">target.</tt><tt class="descname">Component</tt><big>(</big><em>lineWidthDeg, radiusDeg, theta=0.0, color=[1.0, 1.0, 1.0]</em><big>)</big><a class="reference internal" href="_modules/target.html#Component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#target.Component" title="Permalink to this definition">¶</a></dt>
+<dd><p>Superclass for target components. A component may be a line or a circle, for instance.
+A target shape, such as a star or a box, may be made up of many components.</p>
+<dl class="method">
+<dt id="target.Component.draw">
+<tt class="descname">draw</tt><big>(</big><em>x</em>, <em>y</em><big>)</big><a class="reference internal" href="_modules/target.html#Component.draw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#target.Component.draw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw this component at position x,y (pixels). Assume a gl context for
+drawing is available, generated by the caller.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="installation.html"
+                        title="previous chapter">Installation of PyFT</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/target.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation of PyFT"
+             >previous</a> |</li>
+        <li><a href="index.html">PyFT 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Ravi S. Jonnal.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

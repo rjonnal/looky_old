@@ -1,0 +1,181 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation of PyFT &mdash; PyFT 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyFT 1.0 documentation" href="index.html" />
+    <link rel="next" title="target" href="target.html" />
+    <link rel="prev" title="Introduction to PyFT" href="introduction.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="target.html" title="target"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="Introduction to PyFT"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyFT 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="installation-of-pyft">
+<h1>Installation of PyFT<a class="headerlink" href="#installation-of-pyft" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="installing-python-and-other-packages">
+<h2>Installing Python and other packages<a class="headerlink" href="#installing-python-and-other-packages" title="Permalink to this headline">¶</a></h2>
+<p>Installation of PyFT consists largely of installing Python and Pyglet.
+Exact version numbers are provided below, and should be used when
+possible. Version numbers in Python have the format M.m.R (for Major,
+minor, and Release, respectively). Slight differences between the
+versions listed below and your installed versions are unlikely to
+prevent PyFT from working.</p>
+</div>
+<div class="section" id="prerequisite-installation-in-windows">
+<h2>Prerequisite Installation in Windows<a class="headerlink" href="#prerequisite-installation-in-windows" title="Permalink to this headline">¶</a></h2>
+<p>Download and install the packages listed below:</p>
+<blockquote>
+<div><p>1. <a class="reference external" href="http://www.python.org/ftp/python/2.7.3/python-2.7.3.msi">Python 2.7.3</a></p>
+<p>2. <a class="reference external" href="http://pyglet.googlecode.com/files/pyglet-1.1.4.msi">Pyglet 1.1.4</a></p>
+</div></blockquote>
+<p>By default, Python will be installed in <tt class="docutils literal"><span class="pre">C:\Python27</span></tt>. This must be
+appended to the PATH environment variable before proceeding.</p>
+</div>
+<div class="section" id="prerequeisite-installation-in-os-x">
+<h2>Prerequeisite Installation in OS X<a class="headerlink" href="#prerequeisite-installation-in-os-x" title="Permalink to this headline">¶</a></h2>
+<p>Download and install the packages listed below. Python generally comes
+bundled with OS X, and it may be sufficient to use the version already
+installed. If you&#8217;d like to try that, skip 1 below and just install
+Pyglet.</p>
+<blockquote>
+<div><p>1. <a class="reference external" href="http://www.python.org/ftp/python/2.7.5/python-2.7.5-macosx10.6.dmg">Python 2.7.5</a></p>
+<p>2. <a class="reference external" href="http://pyglet.googlecode.com/files/pyglet-1.1.4.dmg">Pyglet 1.1.4</a></p>
+</div></blockquote>
+<p>The environment variable PATH may need to be modified accordingly.</p>
+</div>
+<div class="section" id="installing-pyft">
+<h2>Installing PyFT<a class="headerlink" href="#installing-pyft" title="Permalink to this headline">¶</a></h2>
+<p>Installation consists of unzipping PyFT.zip into any directory. Unzipping
+creates a directory called PyFT, in which the following files reside:</p>
+<blockquote>
+<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">target.py</span></tt>: The main program. This will be launched whenever the
+fixation target is to be used.</li>
+<li><tt class="docutils literal"><span class="pre">calibrate.py</span></tt>: This program is run once after installing (or whenever
+the computer&#8217;s monitor is changed) in order to measure the monitor&#8217;s
+pitch (DPI).</li>
+<li><tt class="docutils literal"><span class="pre">config.py</span></tt>: This file contains all of the configurable parameters
+for the fixation target. Please see the comments in the file for details.</li>
+<li><tt class="docutils literal"><span class="pre">docs</span></tt>: This folder contains documentation source in ReST / Sphinx.
+Compiled documentation can be found in the <tt class="docutils literal"><span class="pre">docs/_build</span></tt> directory.</li>
+<li><tt class="docutils literal"><span class="pre">logs</span></tt>: If this folder does not exist, it will be created upon first
+running target.py. It logs the locations of fixation, with timestamps,
+each time the program is used.</li>
+<li><tt class="docutils literal"><span class="pre">dpi_calibration.txt</span></tt>: This file is generated upon running <tt class="docutils literal"><span class="pre">calibrate.py</span></tt>
+and contains the monitor pitch in DPI. It may be manually created and
+entered as an alternative.</li>
+<li><tt class="docutils literal"><span class="pre">edit_config.bat</span></tt>: This is a DOS script that can be used to launch an
+editor to edit the configuration file. Notepad++ is the default command
+but this can be changed in the script if desired.</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installation of PyFT</a><ul>
+<li><a class="reference internal" href="#installing-python-and-other-packages">Installing Python and other packages</a></li>
+<li><a class="reference internal" href="#prerequisite-installation-in-windows">Prerequisite Installation in Windows</a></li>
+<li><a class="reference internal" href="#prerequeisite-installation-in-os-x">Prerequeisite Installation in OS X</a></li>
+<li><a class="reference internal" href="#installing-pyft">Installing PyFT</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="introduction.html"
+                        title="previous chapter">Introduction to PyFT</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="target.html"
+                        title="next chapter">target</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/installation.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="target.html" title="target"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="Introduction to PyFT"
+             >previous</a> |</li>
+        <li><a href="index.html">PyFT 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Ravi S. Jonnal.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
