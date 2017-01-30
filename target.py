@@ -236,8 +236,8 @@ class Converter:
         return angleDeg/psDegPerPx
 
     def loadDpi(self):
-        fn = pyft_config.CALIBRATION_FILENAME
-        fn = os.path.abspath('.')+'/'+fn
+        fn = os.path.join(os.path.abspath(os.path.dirname(__file__)),pyft_config.CALIBRATION_FILENAME)
+        print fn
         fid = open(fn,'r')
         dpistr = fid.readline().strip()
         fid.close()
@@ -530,7 +530,7 @@ class MiniConverter:
         return angleDeg/psDegPerPx
 
     def loadDpi(self):
-        fn = pyft_config.CALIBRATION_FILENAME
+        fn = os.path.join(os.path.abspath(os.path.dirname(__file__)),pyft_config.CALIBRATION_FILENAME)
         fid = open(fn,'r')
         dpistr = fid.readline().strip()
         fid.close()
