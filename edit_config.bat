@@ -1,1 +1,0 @@
-notepad++ C:\pyft\config.py

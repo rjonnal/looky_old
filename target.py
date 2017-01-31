@@ -852,7 +852,7 @@ class Logger:
         if not os.path.exists(logPath):
             os.makedirs(logPath)        
         nowStr = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        logFilename = logPath + nowStr + '_log.txt'
+        logFilename = os.path.join(logPath,'%s_log.txt'%nowStr)
         self.logFid = open(logFilename,'w')
 
     def log(self,dt):
