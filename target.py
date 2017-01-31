@@ -846,7 +846,9 @@ class Logger:
 
     def __init__(self,loc):
         self.loc = loc
-        logPath = './logs/'
+        
+        #logPath = './logs/'
+        logPath = os.path.join(os.path.abspath(os.path.dirname(__file__)),'logs')
         if not os.path.exists(logPath):
             os.makedirs(logPath)        
         nowStr = datetime.datetime.now().strftime("%Y%m%d%H%M%S")

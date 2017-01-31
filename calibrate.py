@@ -1,3 +1,5 @@
+#!/home/lubuntu/miniconda2/bin/python
+
 import pyglet
 from pyglet.window import mouse
 import sys
@@ -22,14 +24,13 @@ screens = display.get_screens()
 
 iScreen = pyft_config.TARGET_DEFAULT_SCREEN
 
-
 try:
     screen = screens[iScreen]
 except IndexError:
     print 'Current display has only', len(screens), 'screen, but DEFAULT_SCREEN is set to',pyft_config.TARGET_DEFAULT_SCREEN,'in pyft_config.py.'
     sys.exit()
 
-fullScreen = True
+fullScreen = False
 window.set_fullscreen(fullScreen,screen)
 
 width = window.width
