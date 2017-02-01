@@ -1,7 +1,7 @@
 import pyglet
 from pyglet.gl import *
 import sys,os,datetime,math
-import pyft_config
+import looky_config
 from pyglet.window import key
 from time import sleep,time
 import Tkinter, tkFileDialog, tkSimpleDialog
@@ -18,13 +18,13 @@ class FixationTargetApp:
         root.withdraw()
         self.console = Console()
 
-        self.useFundusImage = pyft_config.USE_FUNDUS_IMAGE
+        self.useFundusImage = looky_config.USE_FUNDUS_IMAGE
 
         # set up the main (target) window and get its display and screens
         self.targetWindow = pyglet.window.Window(fullscreen=False)
         self.targetDisplay = self.targetWindow.display
         self.targetScreens = self.targetDisplay.get_screens()
-        self.iTargetScreen = pyft_config.TARGET_DEFAULT_SCREEN
+        self.iTargetScreen = looky_config.TARGET_DEFAULT_SCREEN
 
         self.console.disp('target window: %d screen(s) detected'%len(self.targetScreens))
         for screen in self.targetScreens:
@@ -35,18 +35,18 @@ class FixationTargetApp:
             self.fundusWindow = pyglet.window.Window(fullscreen=False)
             self.fundusDisplay = self.fundusWindow.display
             self.fundusScreens = self.fundusDisplay.get_screens()
-            self.iFundusScreen = pyft_config.FUNDUS_DEFAULT_SCREEN
+            self.iFundusScreen = looky_config.FUNDUS_DEFAULT_SCREEN
             self.console.disp('fundus window: %d screen(s) detected'%len(self.targetScreens))
             for screen in self.targetScreens:
                 self.console.disp('\t %s'%screen)
 
-        # try to use the physical screen specified in pyft_config.py
+        # try to use the physical screen specified in looky_config.py
         try:
             self.targetScreen = self.targetScreens[self.iTargetScreen]
             self.console.disp('target: using screen %s'%self.targetScreen)
 #             print 'Using screen',self.iTargetScreen
         except IndexError:
-            print 'pyft_config.TARGET_DEFAULT_SCREEN is too high. Remember that screens are numbered starting with 0.'
+            print 'looky_config.TARGET_DEFAULT_SCREEN is too high. Remember that screens are numbered starting with 0.'
             sys.exit()
 
         # set up window for fundus image, if it's in use
@@ -56,7 +56,7 @@ class FixationTargetApp:
                 self.console.disp('fundus: using screen %s'%self.fundusScreen)
     #             print 'Using screen',self.iTargetScreen
             except IndexError:
-                print 'pyft_config.FUNDUS_DEFAULT_SCREEN is too high. Remember that screens are numbered starting with 0.'
+                print 'looky_config.FUNDUS_DEFAULT_SCREEN is too high. Remember that screens are numbered starting with 0.'
                 sys.exit()
 
         # a bit awkward, but even if we want to start up w/o fullscreen, we
@@ -72,8 +72,8 @@ class FixationTargetApp:
             self.fundusWindowWidth = self.fundusWindow.width
             self.fundusWindowHeight = self.fundusWindow.height
 
-        # set the OpenGL clearing color, specified in pyft_config.py
-        glClearColor(pyft_config.BACKGROUND_COLOR[0],pyft_config.BACKGROUND_COLOR[1],pyft_config.BACKGROUND_COLOR[2],1.0)
+        # set the OpenGL clearing color, specified in looky_config.py
+        glClearColor(looky_config.BACKGROUND_COLOR[0],looky_config.BACKGROUND_COLOR[1],looky_config.BACKGROUND_COLOR[2],1.0)
 
         # instantiate a visual angle to pixel converter object:
         converter = Converter(self.targetWindow)
@@ -104,13 +104,13 @@ class FixationTargetApp:
             self.fundusWindow.set_size(fiwidth,fiheight)
 
         # use pyglet's scheduler to automatically log the target's status:
-        pyglet.clock.schedule_interval(self.logger.log,pyft_config.LOGGING_PERIOD)
+        pyglet.clock.schedule_interval(self.logger.log,looky_config.LOGGING_PERIOD)
 
         # make a keys object to handle keystrokes and print help
         self.keys = Keys(self.console,self.logger)
 
         # instantiate the target object
-        target = BlinkyStar(pyft_config.DEFAULT_LINE_WIDTH_DEG,pyft_config.DEFAULT_TARGET_RADIUS_DEG)
+        target = BlinkyStar(looky_config.DEFAULT_LINE_WIDTH_DEG,looky_config.DEFAULT_TARGET_RADIUS_DEG)
         
         def nextScreen():
             '''A function for switching physical screens.
@@ -133,28 +133,28 @@ class FixationTargetApp:
 
         # associate keyboard keys with functions, key descriptions, and help blurbs
         self.keys.section('Main target movements')
-        self.keys.add(key.UP,0,loc.moveUp,'up arrow','move target up by %0.1f deg'%pyft_config.RETINA_UNIT_DEG)
-        self.keys.add(key.RIGHT,0,loc.moveRight,'right arrow','move target right by %0.1f deg'%pyft_config.RETINA_UNIT_DEG)
-        self.keys.add(key.LEFT,0,loc.moveLeft,'left arrow','move target left by %0.1f deg'%pyft_config.RETINA_UNIT_DEG)
-        self.keys.add(key.DOWN,0,loc.moveDown,'down arrow','move target down by %0.1f deg'%pyft_config.RETINA_UNIT_DEG)
+        self.keys.add(key.UP,0,loc.moveUp,'up arrow','move target up by %0.1f deg'%looky_config.RETINA_UNIT_DEG)
+        self.keys.add(key.RIGHT,0,loc.moveRight,'right arrow','move target right by %0.1f deg'%looky_config.RETINA_UNIT_DEG)
+        self.keys.add(key.LEFT,0,loc.moveLeft,'left arrow','move target left by %0.1f deg'%looky_config.RETINA_UNIT_DEG)
+        self.keys.add(key.DOWN,0,loc.moveDown,'down arrow','move target down by %0.1f deg'%looky_config.RETINA_UNIT_DEG)
         self.keys.section('Alternate target movements')
-        self.keys.add(key.UP,key.MOD_CTRL,loc.moveUpAlt,'ctrl up arrow','move target up by %0.1f deg'%pyft_config.RETINA_ALTERNATE_UNIT_DEG)
-        self.keys.add(key.RIGHT,key.MOD_CTRL,loc.moveRightAlt,'ctrl right arrow','move target right by %0.1f deg'%pyft_config.RETINA_ALTERNATE_UNIT_DEG)
-        self.keys.add(key.LEFT,key.MOD_CTRL,loc.moveLeftAlt,'ctrl left arrow','move target left by %0.1f deg'%pyft_config.RETINA_ALTERNATE_UNIT_DEG)
-        self.keys.add(key.DOWN,key.MOD_CTRL,loc.moveDownAlt,'ctrl down arrow','move target down by %0.1f deg'%pyft_config.RETINA_ALTERNATE_UNIT_DEG)
+        self.keys.add(key.UP,key.MOD_CTRL,loc.moveUpAlt,'ctrl up arrow','move target up by %0.1f deg'%looky_config.RETINA_ALTERNATE_UNIT_DEG)
+        self.keys.add(key.RIGHT,key.MOD_CTRL,loc.moveRightAlt,'ctrl right arrow','move target right by %0.1f deg'%looky_config.RETINA_ALTERNATE_UNIT_DEG)
+        self.keys.add(key.LEFT,key.MOD_CTRL,loc.moveLeftAlt,'ctrl left arrow','move target left by %0.1f deg'%looky_config.RETINA_ALTERNATE_UNIT_DEG)
+        self.keys.add(key.DOWN,key.MOD_CTRL,loc.moveDownAlt,'ctrl down arrow','move target down by %0.1f deg'%looky_config.RETINA_ALTERNATE_UNIT_DEG)
         self.keys.section('Target center offset')
         self.keys.add(key.O,0,loc.brieflyShowOffset,'o','show offset info')
-        self.keys.add(key.UP,key.MOD_ALT,loc.increaseYOffset,'alt up arrow','move offset up by %d pixels'%pyft_config.OFFSET_UNIT_PIXELS)
-        self.keys.add(key.RIGHT,key.MOD_ALT,loc.increaseXOffset,'alt right arrow','move offset right by %d pixels'%pyft_config.OFFSET_UNIT_PIXELS)
-        self.keys.add(key.LEFT,key.MOD_ALT,loc.decreaseXOffset,'alt left arrow','move offset left by %d pixels'%pyft_config.OFFSET_UNIT_PIXELS)
-        self.keys.add(key.DOWN,key.MOD_ALT,loc.decreaseYOffset,'alt down arrow','move offset down by %d pixels'%pyft_config.OFFSET_UNIT_PIXELS)
+        self.keys.add(key.UP,key.MOD_ALT,loc.increaseYOffset,'alt up arrow','move offset up by %d pixels'%looky_config.OFFSET_UNIT_PIXELS)
+        self.keys.add(key.RIGHT,key.MOD_ALT,loc.increaseXOffset,'alt right arrow','move offset right by %d pixels'%looky_config.OFFSET_UNIT_PIXELS)
+        self.keys.add(key.LEFT,key.MOD_ALT,loc.decreaseXOffset,'alt left arrow','move offset left by %d pixels'%looky_config.OFFSET_UNIT_PIXELS)
+        self.keys.add(key.DOWN,key.MOD_ALT,loc.decreaseYOffset,'alt down arrow','move offset down by %d pixels'%looky_config.OFFSET_UNIT_PIXELS)
         self.keys.section('Target size/shape')
-        self.keys.add(key.EQUAL,0,target.increaseRadius,'=','increase target radius by %0.1f deg'%pyft_config.TARGET_RADIUS_UNIT)
-        self.keys.add(key.MINUS,0,target.decreaseRadius,'-','decrease target radius by %0.1f deg'%pyft_config.TARGET_RADIUS_UNIT)
-        self.keys.add(key.EQUAL,key.MOD_CTRL,target.increaseLineWidth,'ctrl =','increase target line width by %0.2f deg'%pyft_config.LINE_WIDTH_UNIT)
-        self.keys.add(key.MINUS,key.MOD_CTRL,target.decreaseLineWidth,'ctrl -','decrease target line width by %0.2f deg'%pyft_config.LINE_WIDTH_UNIT)
-        self.keys.add(key.EQUAL,key.MOD_ALT,target.increaseBlinkPeriod,'alt =','increase target blink period by %0.1f percent'%(pyft_config.BLINK_PERIOD_ADJUSTMENT_FACTOR*100.0))
-        self.keys.add(key.MINUS,key.MOD_ALT,target.decreaseBlinkPeriod,'alt -','decrease target blink period by %0.1f percent'%(pyft_config.BLINK_PERIOD_ADJUSTMENT_FACTOR*100.0))
+        self.keys.add(key.EQUAL,0,target.increaseRadius,'=','increase target radius by %0.1f deg'%looky_config.TARGET_RADIUS_UNIT)
+        self.keys.add(key.MINUS,0,target.decreaseRadius,'-','decrease target radius by %0.1f deg'%looky_config.TARGET_RADIUS_UNIT)
+        self.keys.add(key.EQUAL,key.MOD_CTRL,target.increaseLineWidth,'ctrl =','increase target line width by %0.2f deg'%looky_config.LINE_WIDTH_UNIT)
+        self.keys.add(key.MINUS,key.MOD_CTRL,target.decreaseLineWidth,'ctrl -','decrease target line width by %0.2f deg'%looky_config.LINE_WIDTH_UNIT)
+        self.keys.add(key.EQUAL,key.MOD_ALT,target.increaseBlinkPeriod,'alt =','increase target blink period by %0.1f percent'%(looky_config.BLINK_PERIOD_ADJUSTMENT_FACTOR*100.0))
+        self.keys.add(key.MINUS,key.MOD_ALT,target.decreaseBlinkPeriod,'alt -','decrease target blink period by %0.1f percent'%(looky_config.BLINK_PERIOD_ADJUSTMENT_FACTOR*100.0))
         self.keys.section('Other')
         self.keys.add(key.SPACE,0,loc.switchEye,'space','switch eye')
         self.keys.add(key.ENTER,0,nextScreen,'enter','next screen')
@@ -223,7 +223,7 @@ class Converter:
     '''Converts visual angles to screen pixels.'''
     def __init__(self,window):
         self.dpi = self.loadDpi()
-        self.plateScaleRadPerM = pyft_config.PLATE_SCALE_RAD_PER_M
+        self.plateScaleRadPerM = looky_config.PLATE_SCALE_RAD_PER_M
         self.dpi = self.loadDpi()
         self.pi = math.pi
         self.xoff = window.width/2.0
@@ -236,7 +236,7 @@ class Converter:
         return angleDeg/psDegPerPx
 
     def loadDpi(self):
-        fn = os.path.join(os.path.abspath(os.path.dirname(__file__)),pyft_config.CALIBRATION_FILENAME)
+        fn = os.path.join(os.path.abspath(os.path.dirname(__file__)),looky_config.CALIBRATION_FILENAME)
         print fn
         fid = open(fn,'r')
         dpistr = fid.readline().strip()
@@ -254,7 +254,7 @@ class Grid:
     generating locations (given a center and spacing), shifting 
     locations, and drawing the grid.
     '''
-    def __init__(self,x0,y0,width,height,spacing,centerColor,otherColor,style='points',size=1.0,border=pyft_config.DEFAULT_GRID_BORDER):
+    def __init__(self,x0,y0,width,height,spacing,centerColor,otherColor,style='points',size=1.0,border=looky_config.DEFAULT_GRID_BORDER):
         self.x0 = x0
         self.y0 = y0
         self.width = width
@@ -267,8 +267,13 @@ class Grid:
         self.style = style
         self.size = size
         self.spacing = spacing
-        self.vertexList,self.N = self.makeVertexList(style)
 
+        if len(self.xLoci)*len(self.yLoci)<looky_config.MAX_GRID_POINTS:
+            self.vertexList,self.N = self.makeVertexList(style)
+        else:
+            self.vertexList = pyglet.graphics.vertex_list(0,('v2f',[]),('c3f',[]))
+            self.N = 0
+        
     def makeLoci(self,center,length,spacing):
         loci = []
         locus = center
@@ -382,7 +387,7 @@ class FundusImage:
 
         # during design and testing, don't prompt user to select
         # a fundus image; just load the test image
-        if pyft_config.TESTING:
+        if looky_config.TESTING:
             self.file = open('./fundus/test.jpg')
             self.fi = pyglet.image.load(self.file.name)
         else:
@@ -435,7 +440,7 @@ class FundusImage:
         xDeg = x/self.pxPerDeg
         yDeg = y/self.pxPerDeg
         if snapToGrid:
-            factor = pyft_config.RETINA_ALTERNATE_UNIT_DEG
+            factor = looky_config.RETINA_ALTERNATE_UNIT_DEG
             xDeg = float(round(xDeg/factor))*factor
             yDeg = float(round(yDeg/factor))*factor
         self.loc.setLocation(xDeg,yDeg)
@@ -473,10 +478,10 @@ class FundusImage:
         if self.PRLset and self.scaleSet:
             x0 = self.PRLx
             y0 = self.PRLy
-            majorSpacing = pyft_config.RETINA_UNIT_DEG*self.pxPerDeg
-            minorSpacing = pyft_config.RETINA_ALTERNATE_UNIT_DEG*self.pxPerDeg
-            self.Mgrid = Grid(x0,y0,self.width,self.height,majorSpacing,pyft_config.FUNDUS_GRID_CENTER_COLOR,pyft_config.FUNDUS_GRID_MAJOR_COLOR,style='pluses',size=10.0,border=0)
-            self.mgrid = Grid(x0,y0,self.width,self.height,minorSpacing,pyft_config.FUNDUS_GRID_CENTER_COLOR,pyft_config.FUNDUS_GRID_MINOR_COLOR,style='points',size=1.0,border=0)
+            majorSpacing = looky_config.RETINA_UNIT_DEG*self.pxPerDeg
+            minorSpacing = looky_config.RETINA_ALTERNATE_UNIT_DEG*self.pxPerDeg
+            self.Mgrid = Grid(x0,y0,self.width,self.height,majorSpacing,looky_config.FUNDUS_GRID_CENTER_COLOR,looky_config.FUNDUS_GRID_MAJOR_COLOR,style='pluses',size=10.0,border=0)
+            self.mgrid = Grid(x0,y0,self.width,self.height,minorSpacing,looky_config.FUNDUS_GRID_CENTER_COLOR,looky_config.FUNDUS_GRID_MINOR_COLOR,style='points',size=1.0,border=0)
 
     def draw(self):
         glColor3f(1.0,1.0,1.0)
@@ -489,23 +494,23 @@ class FundusImage:
             self.Mgrid.draw()
 
         label = pyglet.text.Label(self.loc.info(),
-                      font_name=pyft_config.FONT_NAME,
-                      font_size=pyft_config.FONT_SIZE,
+                      font_name=looky_config.FONT_NAME,
+                      font_size=looky_config.FONT_SIZE,
                       x=self.width-self.textPadding, y=self.height-self.textPadding,
                       anchor_x='right', anchor_y='top', color=[255,255,255,255])
         label.draw()
 
         if not self.PRLset:
             label = pyglet.text.Label('No PRL set. CTRL-click to set PRL.',
-                          font_name=pyft_config.FONT_NAME,
-                          font_size=pyft_config.FONT_SIZE,
+                          font_name=looky_config.FONT_NAME,
+                          font_size=looky_config.FONT_SIZE,
                           x=0+self.textPadding, y=0+self.textPadding+20,
                           anchor_x='left', anchor_y='bottom', color=self.color)
             label.draw()
         if not self.scaleSet:
             label = pyglet.text.Label('No scale set. CTRL-SHIFT-click two points to set scale.',
-                          font_name=pyft_config.FONT_NAME,
-                          font_size=pyft_config.FONT_SIZE,
+                          font_name=looky_config.FONT_NAME,
+                          font_size=looky_config.FONT_SIZE,
                           x=0+self.textPadding, y=0+self.textPadding,
                           anchor_x='left', anchor_y='bottom', color=self.color)
             label.draw()
@@ -519,7 +524,7 @@ class MiniConverter:
     '''
     def __init__(self):
         self.dpi = self.loadDpi()
-        self.plateScaleRadPerM = pyft_config.PLATE_SCALE_RAD_PER_M
+        self.plateScaleRadPerM = looky_config.PLATE_SCALE_RAD_PER_M
         self.dpi = self.loadDpi()
         self.pi = math.pi
 
@@ -530,7 +535,7 @@ class MiniConverter:
         return angleDeg/psDegPerPx
 
     def loadDpi(self):
-        fn = os.path.join(os.path.abspath(os.path.dirname(__file__)),pyft_config.CALIBRATION_FILENAME)
+        fn = os.path.join(os.path.abspath(os.path.dirname(__file__)),looky_config.CALIBRATION_FILENAME)
         fid = open(fn,'r')
         dpistr = fid.readline().strip()
         fid.close()
@@ -550,16 +555,16 @@ class RetinalLocation:
         self.makeGrid()
         self.xDeg = 0.0
         self.yDeg = 0.0
-        self.eye = pyft_config.LEFT
-        self.eyeLabels = pyft_config.EYE_LABELS
-        self.horizontalLabels = pyft_config.HORIZONTAL_LABELS
-        self.verticalLabels = pyft_config.VERTICAL_LABELS
-        self.unit = pyft_config.RETINA_UNIT_DEG
-        self.alternateUnit = pyft_config.RETINA_ALTERNATE_UNIT_DEG
+        self.eye = looky_config.LEFT
+        self.eyeLabels = looky_config.EYE_LABELS
+        self.horizontalLabels = looky_config.HORIZONTAL_LABELS
+        self.verticalLabels = looky_config.VERTICAL_LABELS
+        self.unit = looky_config.RETINA_UNIT_DEG
+        self.alternateUnit = looky_config.RETINA_ALTERNATE_UNIT_DEG
         self.xoff0 = self.xoff
         self.yoff0 = self.yoff
-        self.textPadding = 10
-        self.cross = SimpleCross(pyft_config.OFFSET_COLOR)
+        self.textPadding = 12
+        self.cross = SimpleCross(looky_config.OFFSET_COLOR)
         self.cross.setVisible(False)
         self.logger = None
         self.showGrid = False
@@ -573,16 +578,18 @@ class RetinalLocation:
     
     def changed(self):
         pyglet.clock.unschedule(self.printInfo)
-        pyglet.clock.schedule_once(self.printInfo,pyft_config.LOGGING_SETTLING_PERIOD)
+        pyglet.clock.schedule_once(self.printInfo,looky_config.LOGGING_SETTLING_PERIOD)
         
     def makeGrid(self):
         pxPerDeg = self.converter.d2p(1.0)
-        majorSpacing = pyft_config.RETINA_UNIT_DEG * pxPerDeg
-        minorSpacing = pyft_config.RETINA_ALTERNATE_UNIT_DEG * pxPerDeg
+        majorSpacing = looky_config.RETINA_UNIT_DEG * pxPerDeg
+        minorSpacing = looky_config.RETINA_ALTERNATE_UNIT_DEG * pxPerDeg
+
         x0 = self.xoff
         y0 = self.yoff
-        self.Mgrid = Grid(x0,y0,self.width,self.height,majorSpacing,pyft_config.TARGET_GRID_CENTER_COLOR,pyft_config.TARGET_GRID_MAJOR_COLOR,style='pluses',size=10.0)
-        self.mgrid = Grid(x0,y0,self.width,self.height,minorSpacing,pyft_config.TARGET_GRID_CENTER_COLOR,pyft_config.TARGET_GRID_MINOR_COLOR,style='points',size=1.0)
+        
+        self.Mgrid = Grid(x0,y0,self.width,self.height,majorSpacing,looky_config.TARGET_GRID_CENTER_COLOR,looky_config.TARGET_GRID_MAJOR_COLOR,style='pluses',size=10.0)
+        self.mgrid = Grid(x0,y0,self.width,self.height,minorSpacing,looky_config.TARGET_GRID_CENTER_COLOR,looky_config.TARGET_GRID_MINOR_COLOR,style='points',size=1.0)
 
     def printInfo(self,dt):
         if not self.logger is None:
@@ -637,16 +644,16 @@ class RetinalLocation:
         return 'retinal location: %s'%self.info()
 
     def setLocation(self,xDeg,yDeg):
-        self.xDeg = xDeg * pyft_config.H_ORIENTATION
-        self.yDeg = yDeg * pyft_config.V_ORIENTATION
+        self.xDeg = xDeg * looky_config.H_ORIENTATION
+        self.yDeg = yDeg * looky_config.V_ORIENTATION
         self.changed()
 
     def sign(self,num):
         return math.copysign(1,num)
 
     def info(self):
-        hIdx = int(self.sign(self.xDeg*pyft_config.H_ORIENTATION)+1)
-        vIdx = int(self.sign(self.yDeg*pyft_config.V_ORIENTATION)+1)
+        hIdx = int(self.sign(self.xDeg*looky_config.H_ORIENTATION)+1)
+        vIdx = int(self.sign(self.yDeg*looky_config.V_ORIENTATION)+1)
         return str('%0.2f'%abs(self.xDeg)) + self.horizontalLabels[hIdx] + \
             ', ' + str('%0.2f'%abs(self.yDeg)) + self.verticalLabels[vIdx] + \
             ' (' + self.eyeLabels[self.eye] + ')'
@@ -660,42 +667,42 @@ class RetinalLocation:
         return self.converter.d2p(self.yDeg)+self.yoff
 
     def increaseXOffset(self):
-        self.xoff = self.xoff + pyft_config.OFFSET_UNIT_PIXELS
+        self.xoff = self.xoff + looky_config.OFFSET_UNIT_PIXELS
         self.cross.setVisible(True)
         pyglet.clock.unschedule(self.cross.setInvisible)
-        pyglet.clock.schedule_once(self.cross.setInvisible,pyft_config.OFFSET_CROSS_DURATION)
-        self.mgrid.xShift(pyft_config.OFFSET_UNIT_PIXELS)
-        self.Mgrid.xShift(pyft_config.OFFSET_UNIT_PIXELS)
+        pyglet.clock.schedule_once(self.cross.setInvisible,looky_config.OFFSET_CROSS_DURATION)
+        self.mgrid.xShift(looky_config.OFFSET_UNIT_PIXELS)
+        self.Mgrid.xShift(looky_config.OFFSET_UNIT_PIXELS)
         self.changed()
         return 'retinal center offset: %s'%self.offsetInfo()
 
     def decreaseXOffset(self):
-        self.xoff = self.xoff - pyft_config.OFFSET_UNIT_PIXELS
+        self.xoff = self.xoff - looky_config.OFFSET_UNIT_PIXELS
         self.cross.setVisible(True)
         pyglet.clock.unschedule(self.cross.setInvisible)
-        pyglet.clock.schedule_once(self.cross.setInvisible,pyft_config.OFFSET_CROSS_DURATION)
-        self.mgrid.xShift(-pyft_config.OFFSET_UNIT_PIXELS)
-        self.Mgrid.xShift(-pyft_config.OFFSET_UNIT_PIXELS)
+        pyglet.clock.schedule_once(self.cross.setInvisible,looky_config.OFFSET_CROSS_DURATION)
+        self.mgrid.xShift(-looky_config.OFFSET_UNIT_PIXELS)
+        self.Mgrid.xShift(-looky_config.OFFSET_UNIT_PIXELS)
         self.changed()
         return 'retinal center offset: %s'%self.offsetInfo()
 
     def increaseYOffset(self):
-        self.yoff = self.yoff + pyft_config.OFFSET_UNIT_PIXELS
+        self.yoff = self.yoff + looky_config.OFFSET_UNIT_PIXELS
         self.cross.setVisible(True)
         pyglet.clock.unschedule(self.cross.setInvisible)
-        pyglet.clock.schedule_once(self.cross.setInvisible,pyft_config.OFFSET_CROSS_DURATION)
-        self.mgrid.yShift(pyft_config.OFFSET_UNIT_PIXELS)
-        self.Mgrid.yShift(pyft_config.OFFSET_UNIT_PIXELS)
+        pyglet.clock.schedule_once(self.cross.setInvisible,looky_config.OFFSET_CROSS_DURATION)
+        self.mgrid.yShift(looky_config.OFFSET_UNIT_PIXELS)
+        self.Mgrid.yShift(looky_config.OFFSET_UNIT_PIXELS)
         self.changed()
         return 'retinal center offset: %s'%self.offsetInfo()
 
     def decreaseYOffset(self):
-        self.yoff = self.yoff - pyft_config.OFFSET_UNIT_PIXELS
+        self.yoff = self.yoff - looky_config.OFFSET_UNIT_PIXELS
         self.cross.setVisible(True)
         pyglet.clock.unschedule(self.cross.setInvisible)
-        pyglet.clock.schedule_once(self.cross.setInvisible,pyft_config.OFFSET_CROSS_DURATION)
-        self.mgrid.yShift(-pyft_config.OFFSET_UNIT_PIXELS)
-        self.Mgrid.yShift(-pyft_config.OFFSET_UNIT_PIXELS)
+        pyglet.clock.schedule_once(self.cross.setInvisible,looky_config.OFFSET_CROSS_DURATION)
+        self.mgrid.yShift(-looky_config.OFFSET_UNIT_PIXELS)
+        self.Mgrid.yShift(-looky_config.OFFSET_UNIT_PIXELS)
         self.changed()
         return 'retinal center offset: %s'%self.offsetInfo()
 
@@ -703,24 +710,24 @@ class RetinalLocation:
 #         self.cross.setVisible(True)
         self.cross.toggleVisible()
         pyglet.clock.unschedule(self.cross.setInvisible)
-        pyglet.clock.schedule_once(self.cross.setInvisible,pyft_config.OFFSET_CROSS_DURATION)
+        pyglet.clock.schedule_once(self.cross.setInvisible,looky_config.OFFSET_CROSS_DURATION)
 
 
     def draw(self,right,top):
         label = pyglet.text.Label(self.info(),
-                                  font_name=pyft_config.FONT_NAME,
-                                  font_size=pyft_config.FONT_SIZE,
+                                  font_name=looky_config.FONT_NAME,
+                                  font_size=looky_config.FONT_SIZE,
                                   x=right-self.textPadding, y=top-self.textPadding,
                                   anchor_x='right', anchor_y='top', color=[128,128,128,255])
         offsetLabelColor = []
-        for val in pyft_config.OFFSET_COLOR:
+        for val in looky_config.OFFSET_COLOR:
             offsetLabelColor.append(int(round(255*val)))
         offsetLabelColor.append(255)
         offsetLabel = pyglet.text.Label(str(self.offsetInfo()),
                                         width=350,
                                         multiline=True,
-                                        font_name=pyft_config.FONT_NAME,
-                                        font_size=pyft_config.FONT_SIZE,
+                                        font_name=looky_config.FONT_NAME,
+                                        font_size=looky_config.FONT_SIZE,
                                         x=0+self.textPadding, y=top-self.textPadding,
                                         anchor_x='left', anchor_y='top', color=offsetLabelColor)
         label.draw()
@@ -739,15 +746,15 @@ class RetinalLocation:
 class Console:
     '''A pseudo-console to be drawn on the target window for debugging.
     '''
-    def __init__(self,right=1920,bufferLength=20,width=800):
+    def __init__(self,right=1920,bufferLength=40,width=800):
         self.lines = []
         self.nLines = 0
         self.maxLines = bufferLength
         self.visible = False
         self.right = right
-        self.top = 600
+        self.top = 1000
         self.targetWindowWidth = width
-        self.color = [0,200,0,255]
+        self.color = [100,200,100,255]
         
     def disp(self,line):
         print line
@@ -768,8 +775,8 @@ class Console:
             console = pyglet.text.Label(self.toString(),
                                       width=self.targetWindowWidth,
                                       multiline=True,
-                                      font_name=pyft_config.CONSOLE_FONT_NAME,
-                                      font_size=pyft_config.CONSOLE_FONT_SIZE,
+                                      font_name=looky_config.CONSOLE_FONT_NAME,
+                                      font_size=looky_config.CONSOLE_FONT_SIZE,
                                       x=self.right, y=self.top,
                                       anchor_x='right', anchor_y='top', color=self.color)
             console.draw()
@@ -814,7 +821,7 @@ class Keys:
             if not tup[1] is None:
                 helpstr = helpstr + tup[3] + ':\t ' + tup[4] + '\n'
             else:
-                helpstr = helpstr + '---------- ' + tup[3] + ' ----------\n'
+                helpstr = helpstr + tup[3].upper() + '\n'
         return helpstr
 
     def showHelp(self,dt=0.0):
@@ -831,17 +838,17 @@ class Keys:
             label = pyglet.text.Label(self.helpString(),
                                       width=600,
                                       multiline=True,
-                                      font_name=pyft_config.FONT_NAME,
-                                      font_size=pyft_config.FONT_SIZE-2,
-                                      x=left+self.textPadding, y=top-10*self.textPadding,
-                                      anchor_x='left', anchor_y='top', color=[100,100,200,255])
+                                      font_name=looky_config.FONT_NAME,
+                                      font_size=looky_config.FONT_SIZE-2,
+                                      x=left+self.textPadding, y=top-3*self.textPadding,
+                                      anchor_x='left', anchor_y='top', color=looky_config.HELP_COLOR)
             label.draw()
 
 
         
         
 class Logger:
-    '''Logs the position of fixation target at intervals specified by pyft_config.LOGGING_PERIOD.
+    '''Logs the position of fixation target at intervals specified by looky_config.LOGGING_PERIOD.
     '''
 
     def __init__(self,loc):
@@ -896,7 +903,7 @@ class Target:
             component.draw(self.x,self.y)
 
 
-    def setBlink(self,applyTo=None,blinkPeriod=pyft_config.BLINK_PERIOD,dutyCycle=pyft_config.BLINK_DUTY_CYCLE):
+    def setBlink(self,applyTo=None,blinkPeriod=looky_config.BLINK_PERIOD,dutyCycle=looky_config.BLINK_DUTY_CYCLE):
         if applyTo is None:
             applyTo = range(len(self.components))
 
@@ -913,7 +920,7 @@ class Target:
         newPeriod = None
         for blinker in self.blinkers:
             oldPeriod = blinker.getBlinkPeriod()
-            newPeriod = oldPeriod + pyft_config.BLINK_PERIOD_ADJUSTMENT_FACTOR*oldPeriod
+            newPeriod = oldPeriod + looky_config.BLINK_PERIOD_ADJUSTMENT_FACTOR*oldPeriod
             dutyCycle = blinker.getBlinkDutyCycle()
             blinker.setBlinkPeriod(newPeriod)
             pyglet.clock.unschedule(blinker.toggleVisible)
@@ -925,8 +932,8 @@ class Target:
         newPeriod = None
         for blinker in self.blinkers:
             oldPeriod = blinker.getBlinkPeriod()
-            newPeriod = oldPeriod - pyft_config.BLINK_PERIOD_ADJUSTMENT_FACTOR*oldPeriod
-            newPeriod = max(newPeriod,pyft_config.BLINK_PERIOD_MINIMUM)
+            newPeriod = oldPeriod - looky_config.BLINK_PERIOD_ADJUSTMENT_FACTOR*oldPeriod
+            newPeriod = max(newPeriod,looky_config.BLINK_PERIOD_MINIMUM)
             dutyCycle = blinker.getBlinkDutyCycle()
             blinker.setBlinkPeriod(newPeriod)
             pyglet.clock.unschedule(blinker.toggleVisible)
@@ -1024,16 +1031,16 @@ class Component:
         return self.blinkDutyCycle
 
     def increaseLineWidth(self):
-        self.lineWidth = self.lineWidth + self.d2p(pyft_config.LINE_WIDTH_UNIT)
+        self.lineWidth = self.lineWidth + self.d2p(looky_config.LINE_WIDTH_UNIT)
 
     def decreaseLineWidth(self):
-        self.lineWidth = max(0.0,self.lineWidth - self.d2p(pyft_config.LINE_WIDTH_UNIT))
+        self.lineWidth = max(0.0,self.lineWidth - self.d2p(looky_config.LINE_WIDTH_UNIT))
 
     def increaseRadius(self):
-        self.radius = self.radius + self.d2p(pyft_config.TARGET_RADIUS_UNIT)
+        self.radius = self.radius + self.d2p(looky_config.TARGET_RADIUS_UNIT)
 
     def decreaseRadius(self):
-        self.radius = max(0.0,self.radius - self.d2p(pyft_config.TARGET_RADIUS_UNIT))
+        self.radius = max(0.0,self.radius - self.d2p(looky_config.TARGET_RADIUS_UNIT))
 
     def draw(self,x,y):
         '''Draw this component at position x,y (pixels). Assume a gl context for

@@ -1,7 +1,7 @@
 import pyglet
 from pyglet.gl import *
 import sys
-import config
+import looky_config as lcfg
 from pyglet.window import key
 
 # d=dir()
@@ -33,7 +33,7 @@ class Grid:
         self.spacing = spacing
         self.vertexList,self.N = self.makeVertexList(style)
 
-    def makeLoci(self,center,length,spacing,border=config.DEFAULT_GRID_BORDER):
+    def makeLoci(self,center,length,spacing,border=lcfg.DEFAULT_GRID_BORDER):
         loci = []
         locus = center
         while locus >= -border:
@@ -173,7 +173,7 @@ class FixationTargetApp:
         self.targetWindow = pyglet.window.Window(fullscreen=True)
         self.targetDisplay = self.targetWindow.display
         self.targetScreens = self.targetDisplay.get_screens()
-        self.iTargetScreen = config.TARGET_DEFAULT_SCREEN
+        self.iTargetScreen = lcfg.TARGET_DEFAULT_SCREEN
         shiftSize = 10
 
         x0 = self.targetWindow.width/2.0
